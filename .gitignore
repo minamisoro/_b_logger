@@ -1,0 +1,11 @@
+# Environment files
+.env
+
+# Database
+*.db
+*.db-shm
+*.db-wal
+
+# OS files
+.DS_Store
+Thumbs.db

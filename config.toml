@@ -1,0 +1,14 @@
+# Minamisoro Blog Configuration
+# This configuration file is shared across all components of the blog platform
+
+[server]
+host = "127.0.0.1"
+port = 8080
+
+[frontend.web]
+api_base_url = "http://127.0.0.1:8080"
+dev_port = 5173
+
+[frontend.admin]
+api_base_url = "http://127.0.0.1:8080"
+dev_port = 5174
