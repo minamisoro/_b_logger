@@ -2,6 +2,8 @@
 
 A modern blog platform built as a monorepo, featuring a Rust backend API and Vue 3 frontend applications.
 
+Big portion of this project uses AI. I am trying to be open minded about the effectiveness of the AI, trying to see how far it can go by using its tools extensively and carefully vetting its output for correctness.
+
 ## Project Structure
 
 ```
