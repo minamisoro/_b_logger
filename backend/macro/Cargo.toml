@@ -1,5 +1,5 @@
 [package]
-name = "minamisoro-macro"
+name = "blogger-macro"
 version = "0.1.0"
 edition = "2024"
 

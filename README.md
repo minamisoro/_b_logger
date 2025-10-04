@@ -1,4 +1,4 @@
-# Minamisoro Blog
+# _B_logger
 
 A modern blog platform built as a monorepo, featuring a Rust backend API and Vue 3 frontend applications.
 

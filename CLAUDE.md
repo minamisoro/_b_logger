@@ -4,16 +4,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a blog project (Minamisoro Blog) organized as a monorepo with the following structure:
+This is a blog project (_B_logger) organized as a monorepo with the following structure:
 
 ```
 blog/
 ├── backend/
-│   ├── api/          # Rust REST API server (minamisoro-api)
-│   └── macro/        # Rust procedural macros library (minamisoro-macro)
+│   ├── api/          # Rust REST API server (blogger-api)
+│   └── macro/        # Rust procedural macros library (blogger-macro)
 ├── frontend/
-│   ├── web/          # Vue 3 public-facing blog (minamisoro-web)
-│   └── admin/        # Vue 3 admin panel (minamisoro-admin)
+│   ├── web/          # Vue 3 public-facing blog (blogger-web)
+│   └── admin/        # Vue 3 admin panel (blogger-admin)
 └── scripts/          # Utility scripts
 ```
 
@@ -117,19 +117,19 @@ cd frontend/admin && npm run format
 
 ## Architecture
 
-### Backend - API (`minamisoro-api`)
+### Backend - API (`blogger-api`)
 - **Language**: Rust (Edition 2024)
 - **Type**: Binary (application)
 - **Entry point**: [backend/api/src/main.rs](backend/api/src/main.rs)
 - **Purpose**: REST API server for the blog platform
 
-### Backend - Macro Library (`minamisoro-macro`)
+### Backend - Macro Library (`blogger-macro`)
 - **Language**: Rust (Edition 2024)
 - **Type**: Library (proc-macro)
 - **Entry point**: [backend/macro/src/lib.rs](backend/macro/src/lib.rs)
 - **Purpose**: Procedural macros used by the API and shared utilities
 
-### Frontend - Public Web (`minamisoro-web`)
+### Frontend - Public Web (`blogger-web`)
 - **Framework**: Vue 3 with Composition API
 - **Language**: TypeScript
 - **Build tool**: Vite
@@ -142,7 +142,7 @@ cd frontend/admin && npm run format
 - **Path alias**: `@` resolves to `src/`
 - **Purpose**: Public-facing blog website for readers
 
-### Frontend - Admin Panel (`minamisoro-admin`)
+### Frontend - Admin Panel (`blogger-admin`)
 - **Framework**: Vue 3 with Composition API
 - **Language**: TypeScript
 - **Build tool**: Vite
