@@ -1,19 +1,25 @@
-use axum::{extract::State, http::StatusCode, routing::get, Router};
+use axum::{http::StatusCode, routing::get, Router};
 use serde::Serialize;
+use utoipa::ToSchema;
 
-use crate::db::DbPool;
-use crate::response::{ApiResponse, IntoSuccess};
+use crate::db::{DbConnection, DbPool};
+use crate::response::{ApiError, ApiResponse, IntoSuccess};
 
-#[derive(Serialize)]
+#[derive(Serialize, ToSchema)]
 pub struct TimelinePost {
+    /// Unique identifier for the post
     pub id: String,
+    /// Post title
     pub title: String,
+    /// Post excerpt/summary
     pub excerpt: String,
+    /// Publication timestamp (ISO 8601)
     pub published_at: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, ToSchema)]
 pub struct TimelineResponse {
+    /// List of published posts
     pub posts: Vec<TimelinePost>,
 }
 
@@ -22,10 +28,18 @@ impl IntoSuccess for TimelineResponse {
 }
 
 /// Get timeline of published posts
-async fn get_timeline(State(pool): State<DbPool>) -> ApiResponse<TimelineResponse> {
+#[utoipa::path(
+    get,
+    path = "/api/timeline",
+    responses(
+        (status = 200, description = "Successfully retrieved timeline", body = TimelineResponse),
+        (status = 500, description = "Database connection error", body = ApiError)
+    ),
+    tag = "Timeline"
+)]
+async fn get_timeline(DbConnection(_conn): DbConnection) -> ApiResponse<TimelineResponse> {
     // TODO: Implement database query to fetch published posts
     // For now, returning mock data
-    let _conn = pool.get().expect("Failed to get database connection");
 
     let posts = vec![TimelinePost {
         id: "1".to_string(),
