@@ -9,12 +9,33 @@ This is a blog project (_B_logger) organized as a monorepo with the following st
 ```
 blog/
 ├── backend/
-│   ├── api/          # Rust REST API server (blogger-api)
-│   └── macro/        # Rust procedural macros library (blogger-macro)
+│   ├── api/                    # Rust REST API server (blogger-api)
+│   │   ├── migrations/         # Diesel database migrations
+│   │   └── src/
+│   │       └── main.rs         # API entry point
+│   └── macro/                  # Rust procedural macros library (blogger-macro)
+│       └── src/
+│           └── lib.rs          # Macro definitions
 ├── frontend/
-│   ├── web/          # Vue 3 public-facing blog (blogger-web)
-│   └── admin/        # Vue 3 admin panel (blogger-admin)
-└── scripts/          # Utility scripts
+│   ├── web/                    # Vue 3 public-facing blog (blogger-web)
+│   │   └── src/
+│   │       ├── assets/         # Static assets
+│   │       ├── components/     # Vue components
+│   │       ├── router/         # Vue Router config
+│   │       ├── stores/         # Pinia stores
+│   │       ├── views/          # Page views
+│   │       ├── App.vue         # Root component
+│   │       └── main.ts         # Entry point
+│   └── admin/                  # Vue 3 admin panel (blogger-admin)
+│       └── src/
+│           ├── assets/         # Static assets
+│           ├── components/     # Vue components
+│           ├── router/         # Vue Router config
+│           ├── stores/         # Pinia stores
+│           ├── views/          # Page views
+│           ├── App.vue         # Root component
+│           └── main.ts         # Entry point
+└── scripts/                    # Utility scripts
 ```
 
 ## Development Commands

@@ -9,12 +9,33 @@ Big portion of this project uses AI. I am trying to be open minded about the eff
 ```
 blog/
 ├── backend/
-│   ├── api/          # REST API server
-│   └── macro/        # Procedural macros library
+│   ├── api/                    # REST API server
+│   │   ├── migrations/         # Database migrations
+│   │   └── src/
+│   │       └── main.rs         # API entry point
+│   └── macro/                  # Procedural macros library
+│       └── src/
+│           └── lib.rs          # Macro definitions
 ├── frontend/
-│   ├── web/          # Public-facing blog website
-│   └── admin/        # Admin panel for content management
-└── scripts/          # Utility scripts
+│   ├── web/                    # Public-facing blog website
+│   │   └── src/
+│   │       ├── assets/         # Static assets
+│   │       ├── components/     # Vue components
+│   │       ├── router/         # Vue Router config
+│   │       ├── stores/         # Pinia stores
+│   │       ├── views/          # Page views
+│   │       ├── App.vue         # Root component
+│   │       └── main.ts         # Entry point
+│   └── admin/                  # Admin panel for content management
+│       └── src/
+│           ├── assets/         # Static assets
+│           ├── components/     # Vue components
+│           ├── router/         # Vue Router config
+│           ├── stores/         # Pinia stores
+│           ├── views/          # Page views
+│           ├── App.vue         # Root component
+│           └── main.ts         # Entry point
+└── scripts/                    # Utility scripts
 ```
 
 ## Requirements
@@ -22,6 +43,11 @@ blog/
 ### Backend
 - **Rust**: Latest stable version (Edition 2024)
 - **Cargo**: Comes with Rust installation
+- **PostgreSQL**: 18+ (for UUIDv7 support)
+- **Diesel CLI**: For database migrations
+  ```bash
+  cargo install diesel_cli --no-default-features --features postgres
+  ```
 
 ### Frontend
 - **Node.js**: ^20.19.0 or >=22.12.0
