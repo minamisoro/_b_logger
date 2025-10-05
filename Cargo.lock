@@ -178,6 +178,15 @@ name = "blogger-macro"
 version = "0.1.0"
 
 [[package]]
+name = "blogger-scripts"
+version = "0.1.0"
+dependencies = [
+ "blogger-api",
+ "serde_json",
+ "utoipa",
+]
+
+[[package]]
 name = "bumpalo"
 version = "3.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

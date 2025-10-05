@@ -1,30 +1,44 @@
-use axum::{http::StatusCode, routing::get, Router};
-use serde::Serialize;
-use utoipa::ToSchema;
+use axum::extract::Query;
+use axum::{Router, routing::get};
 
 use crate::db::{DbConnection, DbPool};
-use crate::response::{ApiError, ApiResponse, IntoSuccess};
+use crate::response::{ApiError, ApiResponse};
 
-#[derive(Serialize, ToSchema)]
-pub struct TimelinePost {
-    /// Unique identifier for the post
-    pub id: String,
-    /// Post title
-    pub title: String,
-    /// Post excerpt/summary
-    pub excerpt: String,
-    /// Publication timestamp (ISO 8601)
-    pub published_at: String,
-}
+use types::*;
+pub mod types {
+    use axum::http::StatusCode;
+    use serde::{Deserialize, Serialize};
+    use utoipa::{IntoParams, ToSchema};
 
-#[derive(Serialize, ToSchema)]
-pub struct TimelineResponse {
-    /// List of published posts
-    pub posts: Vec<TimelinePost>,
-}
+    use crate::response::IntoSuccess;
 
-impl IntoSuccess for TimelineResponse {
-    const STATUS_CODE: StatusCode = StatusCode::OK;
+    #[derive(Serialize, ToSchema)]
+    pub struct TimelinePost {
+        /// Unique identifier for the post
+        pub id: String,
+        /// Post title
+        pub title: String,
+        /// Post excerpt/summary
+        pub excerpt: String,
+        /// Publication timestamp (ISO 8601)
+        pub published_at: String,
+    }
+
+    #[derive(Deserialize, ToSchema, IntoParams)]
+    pub struct GetTimelineRequest {
+        pub limit: u32,
+        pub pages: u32,
+    }
+
+    #[derive(Serialize, ToSchema)]
+    pub struct GetTimelineResponse {
+        /// List of published posts
+        pub posts: Vec<TimelinePost>,
+    }
+
+    impl IntoSuccess for GetTimelineResponse {
+        const STATUS_CODE: StatusCode = StatusCode::OK;
+    }
 }
 
 /// Get timeline of published posts
@@ -32,12 +46,16 @@ impl IntoSuccess for TimelineResponse {
     get,
     path = "/api/timeline",
     responses(
-        (status = 200, description = "Successfully retrieved timeline", body = TimelineResponse),
+        (status = 200, description = "Successfully retrieved timeline", body = GetTimelineResponse),
         (status = 500, description = "Database connection error", body = ApiError)
     ),
+    params(GetTimelineRequest),
     tag = "Timeline"
 )]
-async fn get_timeline(DbConnection(_conn): DbConnection) -> ApiResponse<TimelineResponse> {
+async fn get_timeline(
+    DbConnection(_conn): DbConnection,
+    Query(query): Query<GetTimelineRequest>,
+) -> ApiResponse<GetTimelineResponse> {
     // TODO: Implement database query to fetch published posts
     // For now, returning mock data
 
@@ -48,7 +66,7 @@ async fn get_timeline(DbConnection(_conn): DbConnection) -> ApiResponse<Timeline
         published_at: "2025-10-05T00:00:00Z".to_string(),
     }];
 
-    ApiResponse::Success(TimelineResponse { posts })
+    ApiResponse::Success(GetTimelineResponse { posts })
 }
 
 pub fn routes() -> Router<DbPool> {

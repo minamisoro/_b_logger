@@ -2,5 +2,6 @@
 members = [
     "backend/api",
     "backend/macro",
+    "backend/scripts",
 ]
 resolver = "2"

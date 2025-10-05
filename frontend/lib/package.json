@@ -1,0 +1,11 @@
+{
+  "name": "blogger-lib",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared API types and client for Blogger frontend applications",
+  "exports": {
+    "./api": "./api.ts",
+    "./client": "./client.ts"
+  }
+}

@@ -14,30 +14,25 @@ from pathlib import Path
 
 # ANSI color codes for output
 COLORS = {
-    'api': '\033[94m',      # Blue
-    'web': '\033[92m',      # Green
-    'admin': '\033[93m',    # Yellow
-    'reset': '\033[0m',     # Reset
-    'bold': '\033[1m',      # Bold
-    'error': '\033[91m',    # Red
+    'api': '\033[94m',        # Blue
+    'web': '\033[92m',        # Green
+    'frontend': '\033[92m',   # Green
+    'reset': '\033[0m',       # Reset
+    'bold': '\033[1m',        # Bold
+    'error': '\033[91m',      # Red
 }
 
 # Process configurations
 PROCESSES = {
     'api': {
-        'cmd': ['watchexec', '-e', 'rs,toml', '-r', 'cargo', 'run'],
-        'cwd': 'backend/api',
+        'cmd': ['watchexec', '-e', 'rs,toml', '-r', '--', 'sh', '-c', '"npm run api:generate"'],
+        'cwd': '.',
         'color': COLORS['api'],
     },
-    'web': {
+    'frontend': {
         'cmd': ['npm', 'run', 'dev'],
-        'cwd': 'frontend/web',
+        'cwd': '.',
         'color': COLORS['web'],
-    },
-    'admin': {
-        'cmd': ['npm', 'run', 'dev'],
-        'cwd': 'frontend/admin',
-        'color': COLORS['admin'],
     },
 }
 

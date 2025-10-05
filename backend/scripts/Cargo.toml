@@ -1,0 +1,13 @@
+[package]
+name = "blogger-scripts"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "generate-openapi"
+path = "src/generate_openapi.rs"
+
+[dependencies]
+blogger-api = { path = "../api" }
+utoipa = "5.3"
+serde_json = "1.0"
