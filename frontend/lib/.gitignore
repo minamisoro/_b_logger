@@ -1,4 +1,3 @@
 # ignore generated files
 api.ts
-client.ts
 swagger.json
