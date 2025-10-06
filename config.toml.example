@@ -2,6 +2,9 @@
 # Copy this file to config.toml and adjust values for your environment
 # Run 'python scripts/sync-config.py' after making changes
 
+[database]
+url = "postgres://user:password@localhost/blogger_db"
+
 [server]
 host = "127.0.0.1"
 port = 8080

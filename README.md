@@ -80,22 +80,26 @@ blog/
    cp config.toml.example config.toml
    ```
 
-2. **Set up environment variables:**
-   ```bash
-   # Create .env file for backend (in project root)
-   echo "DATABASE_URL=postgres://user:password@localhost/blogger_db" > .env
+2. **Edit config.toml with your settings:**
+   - Update database URL with your PostgreSQL credentials
+   - Adjust ports if needed (defaults: API=8080, web=8081, admin=8082)
 
-   # Sync frontend .env files from config.toml
+3. **Generate .env files from config:**
+   ```bash
    python scripts/sync-config.py
    ```
+   This will create:
+   - `.env` (backend with DATABASE_URL)
+   - `frontend/web/.env` (web frontend settings)
+   - `frontend/admin/.env` (admin frontend settings)
 
-3. **Set up the database:**
+4. **Set up the database:**
    ```bash
    # Create database
    createdb blogger_db
 
    # Run migrations
-   diesel migration run --database-url postgres://user:password@localhost/blogger_db
+   diesel migration run
    ```
 
 ### Quick Start
