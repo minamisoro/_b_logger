@@ -73,7 +73,24 @@ blog/
 
 ## Getting Started
 
-### Initial Setup
+### Interactive Setup (Recommended)
+
+The easiest way to get started is with the interactive setup script:
+
+```bash
+task init
+```
+
+This will guide you through:
+- Database configuration (PostgreSQL credentials)
+- Server and frontend port settings
+- Automatic generation of config.toml and .env files
+- Database creation and migrations
+- Dependencies installation
+
+### Manual Setup
+
+If you prefer to configure manually:
 
 1. **Copy the configuration template:**
    ```bash
@@ -102,13 +119,18 @@ blog/
    diesel migration run
    ```
 
+5. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
 ### Quick Start
 
 Use **Task** commands for the easiest workflow:
 
 ```bash
-# Install all dependencies (uses npm workspaces)
-task install
+# Interactive setup (first time only)
+task init
 
 # Start all development servers (API + web + admin)
 task dev

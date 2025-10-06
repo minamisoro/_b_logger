@@ -8,6 +8,11 @@ tasks:
     cmds:
       - task: dev
 
+  init:
+    desc: Interactive setup - configure and initialize the project
+    cmds:
+      - python scripts/init.py
+
   dev:
     desc: Run all development servers (API, web, admin) with color-coded output
     cmds:
