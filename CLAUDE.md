@@ -4,7 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a blog project (_B_logger) organized as a monorepo with the following structure:
+This is a blog project (_B_logger) organized as a monorepo using:
+- **Cargo workspaces** for Rust backend projects
+- **npm workspaces** for frontend projects
+- **Task** (Taskfile.dev) for workflow automation
+
+Project structure:
 
 ```
 blog/
@@ -13,10 +18,14 @@ blog/
 │   │   ├── migrations/         # Diesel database migrations
 │   │   └── src/
 │   │       └── main.rs         # API entry point
-│   └── macro/                  # Rust procedural macros library (blogger-macro)
-│       └── src/
-│           └── lib.rs          # Macro definitions
+│   ├── macro/                  # Rust procedural macros library (blogger-macro)
+│   │   └── src/
+│   │       └── lib.rs          # Macro definitions
+│   └── scripts/                # Rust utility scripts
 ├── frontend/
+│   ├── lib/                    # Shared API types and client (blogger-lib)
+│   │   ├── api.ts              # Generated OpenAPI types
+│   │   └── client.ts           # Type-safe API client wrapper
 │   ├── web/                    # Vue 3 public-facing blog (blogger-web)
 │   │   └── src/
 │   │       ├── assets/         # Static assets
@@ -35,105 +44,64 @@ blog/
 │           ├── views/          # Page views
 │           ├── App.vue         # Root component
 │           └── main.ts         # Entry point
-└── scripts/                    # Utility scripts
+└── scripts/                    # Python utility scripts
+    └── dev.py                  # Development server runner
 ```
 
 ## Development Commands
 
-### Backend - API (Rust)
+**IMPORTANT**: This project uses Task (Taskfile.dev) for workflow automation. Always prefer Task commands:
+
+### Quick Start
 ```bash
-# Build the API
-cd backend/api && cargo build
+# Install all dependencies
+task install
 
-# Run the API
-cd backend/api && cargo run
+# Start all development servers (API + web + admin)
+task dev
 
-# Run tests
-cd backend/api && cargo test
-
-# Run in watch mode (requires watchexec)
-cd backend/api && watchexec -e rs,toml -r cargo run
-
-# Check code without building
-cd backend/api && cargo check
-
-# Format code
-cd backend/api && cargo fmt
-
-# Lint code
-cd backend/api && cargo clippy
+# Build all projects
+task build
 ```
 
-### Backend - Macro Library (Rust)
+### Workspace Commands
+
+All commands run from the project root using workspace features:
+
+**Frontend** (npm workspaces):
 ```bash
-# Build the macro library
-cd backend/macro && cargo build
+# Run tests across all frontend projects
+npm run test
 
-# Run tests
-cd backend/macro && cargo test
+# Type check all frontend projects
+npm run type-check
 
-# Check code without building
-cd backend/macro && cargo check
+# Lint all frontend projects
+npm run lint
 
-# Format code
-cd backend/macro && cargo fmt
+# Format all frontend projects
+npm run format
 
-# Lint code
-cd backend/macro && cargo clippy
+# Build all frontend projects
+npm run build
 ```
 
-### Frontend - Public Web (Vue 3)
+**Backend** (Cargo workspaces):
 ```bash
-# Install dependencies
-cd frontend/web && npm install
+# Run all backend tests
+cargo test --workspace
 
-# Run development server
-cd frontend/web && npm run dev
+# Format all Rust code
+cargo fmt --workspace
 
-# Build for production
-cd frontend/web && npm run build
+# Lint all Rust code
+cargo clippy --workspace
 
-# Preview production build
-cd frontend/web && npm run preview
+# Build all backend projects
+cargo build --workspace
 
-# Run unit tests
-cd frontend/web && npm run test:unit
-
-# Type check
-cd frontend/web && npm run type-check
-
-# Lint and fix
-cd frontend/web && npm run lint
-
-# Format code
-cd frontend/web && npm run format
-```
-
-### Frontend - Admin Panel (Vue 3)
-```bash
-# Install dependencies
-cd frontend/admin && npm install
-
-# Run development server
-cd frontend/admin && npm run dev
-
-# Build for production
-cd frontend/admin && npm run build
-
-# Preview production build
-cd frontend/admin && npm run preview
-
-# Run unit tests
-cd frontend/admin && npm run test:unit
-
-# Type check
-cd frontend/admin && npm run type-check
-
-# Lint and fix
-cd frontend/admin && npm run lint
-
-# Format code
-cd frontend/admin && npm run format
+# Run specific binary
+cargo run --bin blogger-api
 ```
 
 ## Architecture

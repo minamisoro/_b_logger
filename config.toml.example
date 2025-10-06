@@ -1,0 +1,15 @@
+# _B_logger Configuration Example
+# Copy this file to config.toml and adjust values for your environment
+# Run 'python scripts/sync-config.py' after making changes
+
+[server]
+host = "127.0.0.1"
+port = 8080
+
+[frontend.web]
+host = "127.0.0.1"
+port = 8081
+
+[frontend.admin]
+host = "127.0.0.1"
+port = 8082

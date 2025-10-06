@@ -6,6 +6,8 @@ Big portion of this project uses AI. I am trying to be open minded about the eff
 
 ## Project Structure
 
+This monorepo uses **Cargo workspaces** for Rust projects and **npm workspaces** for frontend projects.
+
 ```
 blog/
 ├── backend/
@@ -13,10 +15,14 @@ blog/
 │   │   ├── migrations/         # Database migrations
 │   │   └── src/
 │   │       └── main.rs         # API entry point
-│   └── macro/                  # Procedural macros library
-│       └── src/
-│           └── lib.rs          # Macro definitions
+│   ├── macro/                  # Procedural macros library
+│   │   └── src/
+│   │       └── lib.rs          # Macro definitions
+│   └── scripts/                # Rust utility scripts
 ├── frontend/
+│   ├── lib/                    # Shared API types and client
+│   │   ├── api.ts              # Generated OpenAPI types
+│   │   └── client.ts           # Type-safe API client wrapper
 │   ├── web/                    # Public-facing blog website
 │   │   └── src/
 │   │       ├── assets/         # Static assets
@@ -35,7 +41,8 @@ blog/
 │           ├── views/          # Page views
 │           ├── App.vue         # Root component
 │           └── main.ts         # Entry point
-└── scripts/                    # Utility scripts
+└── scripts/                    # Python utility scripts
+    └── dev.py                  # Development server runner
 ```
 
 ## Requirements
@@ -53,61 +60,102 @@ blog/
 - **Node.js**: ^20.19.0 or >=22.12.0
 - **npm**: Latest version (comes with Node.js)
 
-### Development
-- **Python**: 3.6+ (for running the dev script)
-
-### Optional Tools
-- **watchexec**: For Rust hot-reloading during development
-  ```bash
-  cargo install watchexec-cli
-  ```
-- **Task**: For running development tasks
+### Development Tools
+- **Task**: For running development workflows (recommended)
   ```bash
   # See https://taskfile.dev/installation/
+  ```
+- **Python**: 3.6+ (for the dev script)
+- **watchexec**: For Rust hot-reloading (required for `task dev`)
+  ```bash
+  cargo install watchexec-cli
   ```
 
 ## Getting Started
 
-### Quick Start (All Servers)
+### Initial Setup
+
+1. **Copy the configuration template:**
+   ```bash
+   cp config.toml.example config.toml
+   ```
+
+2. **Set up environment variables:**
+   ```bash
+   # Create .env file for backend (in project root)
+   echo "DATABASE_URL=postgres://user:password@localhost/blogger_db" > .env
+
+   # Sync frontend .env files from config.toml
+   python scripts/sync-config.py
+   ```
+
+3. **Set up the database:**
+   ```bash
+   # Create database
+   createdb blogger_db
+
+   # Run migrations
+   diesel migration run --database-url postgres://user:password@localhost/blogger_db
+   ```
+
+### Quick Start
+
+Use **Task** commands for the easiest workflow:
 
 ```bash
-# Install frontend dependencies
+# Install all dependencies (uses npm workspaces)
 task install
 
-# Run all development servers concurrently with color-coded output
+# Start all development servers (API + web + admin)
 task dev
-# Or directly: python scripts/dev.py
+
+# Build all projects
+task build
 ```
 
-The dev script will:
+The `task dev` command will:
 - Run API, web, and admin servers concurrently
-- Color-code output by process (blue=API, green=web, yellow=admin)
+- Color-code output by process (blue=API, green=frontend)
 - Gracefully shut down all processes on Ctrl+C
 - Automatically stop all processes if any one fails
 
-### Backend Development
+### Alternative: Manual Commands
 
+If you prefer not to use Task:
+
+**Install:**
 ```bash
-# Run the API server
-cd backend/api
-cargo run
-
-# Run in watch mode with watchexec
-watchexec -e rs,toml -r cargo run
+npm install
 ```
 
-### Frontend Development
-
+**Development:**
 ```bash
-# Public website
-cd frontend/web
-npm install
+# Backend (from project root)
+cargo run --bin blogger-api
+
+# Frontend (from project root)
 npm run dev
 
-# Admin panel
-cd frontend/admin
-npm install
-npm run dev
+# Or run the dev script directly
+python scripts/dev.py
+```
+
+**Testing:**
+```bash
+# Backend
+cargo test --workspace
+
+# Frontend
+npm run test
+```
+
+**Building:**
+```bash
+# Backend
+cargo build --workspace --release
+
+# Frontend
+npm run build
 ```
 
 ## Tech Stack

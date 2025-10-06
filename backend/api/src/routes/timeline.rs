@@ -18,8 +18,8 @@ pub mod types {
         pub id: String,
         /// Post title
         pub title: String,
-        /// Post excerpt/summary
-        pub excerpt: String,
+        /// Content
+        pub content: String,
         /// Publication timestamp (ISO 8601)
         pub published_at: String,
     }
@@ -62,7 +62,7 @@ async fn get_timeline(
     let posts = vec![TimelinePost {
         id: "1".to_string(),
         title: "Sample Post".to_string(),
-        excerpt: "This is a sample post".to_string(),
+        content: "Sample Content".to_string(),
         published_at: "2025-10-05T00:00:00Z".to_string(),
     }];
 

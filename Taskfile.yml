@@ -13,95 +13,19 @@ tasks:
     cmds:
       - python scripts/dev.py
 
-  dev:api:
-    desc: Run the Rust API server with hot reloading
-    dir: backend/api
-    cmds:
-      - watchexec -e rs,toml -r cargo run
-
-  dev:web:
-    desc: Run the public web frontend
-    dir: frontend/web
-    cmds:
-      - npm run dev
-
-  dev:admin:
-    desc: Run the admin panel frontend
-    dir: frontend/admin
-    cmds:
-      - npm run dev
-
   install:
-    desc: Install all dependencies
-    cmds:
-      - task: install:web
-      - task: install:admin
-
-  install:web:
-    desc: Install web frontend dependencies
-    dir: frontend/web
-    cmds:
-      - npm install
-
-  install:admin:
-    desc: Install admin panel dependencies
-    dir: frontend/admin
+    desc: Install all dependencies using npm workspaces
     cmds:
       - npm install
 
   build:
-    desc: Build all projects
+    desc: Build all projects (API and frontend workspaces)
     cmds:
-      - task: build:api
-      - task: build:web
-      - task: build:admin
-
-  build:api:
-    desc: Build the Rust API
-    dir: backend/api
-    cmds:
-      - cargo build --release
-
-  build:web:
-    desc: Build the web frontend
-    dir: frontend/web
-    cmds:
-      - npm run build
-
-  build:admin:
-    desc: Build the admin panel
-    dir: frontend/admin
-    cmds:
+      - cargo build --release --manifest-path backend/api/Cargo.toml
       - npm run build
 
   test:
-    desc: Run all tests
-    cmds:
-      - task: test:api
-      - task: test:macro
-      - task: test:web
-      - task: test:admin
-
-  test:api:
-    desc: Test the Rust API
-    dir: backend/api
+    desc: Run tests
     cmds:
       - cargo test
-
-  test:macro:
-    desc: Test the Rust macro library
-    dir: backend/macro
-    cmds:
-      - cargo test
-
-  test:web:
-    desc: Test the web frontend
-    dir: frontend/web
-    cmds:
-      - npm run test:unit
-
-  test:admin:
-    desc: Test the admin panel
-    dir: frontend/admin
-    cmds:
-      - npm run test:unit
+      - npm run test
