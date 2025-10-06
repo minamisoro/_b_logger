@@ -77,7 +77,7 @@ blog/
 
 1. **Copy the configuration template:**
    ```bash
-   cp config.toml.example config.toml
+   cp config.example.toml config.toml
    ```
 
 2. **Edit config.toml with your settings:**
