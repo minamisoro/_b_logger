@@ -7,6 +7,8 @@ pub mod post;
 pub mod post_tag;
 pub mod post_link;
 pub mod comment;
+pub mod user_group;
+pub mod user_group_member;
 
 pub use user::*;
 pub use role::*;
@@ -17,3 +19,5 @@ pub use post::*;
 pub use post_tag::*;
 pub use post_link::*;
 pub use comment::*;
+pub use user_group::*;
+pub use user_group_member::*;

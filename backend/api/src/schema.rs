@@ -89,6 +89,26 @@ diesel::table! {
 }
 
 diesel::table! {
+    user_group_members (id) {
+        id -> Uuid,
+        group_id -> Uuid,
+        user_id -> Uuid,
+        created_at -> Timestamp,
+    }
+}
+
+diesel::table! {
+    user_groups (id) {
+        id -> Uuid,
+        user_id -> Uuid,
+        #[max_length = 255]
+        name -> Varchar,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+    }
+}
+
+diesel::table! {
     user_roles (user_id, role_id) {
         user_id -> Uuid,
         role_id -> Uuid,
@@ -116,6 +136,9 @@ diesel::joinable!(open_id_credentials -> users (user_id));
 diesel::joinable!(post_tags -> posts (post_id));
 diesel::joinable!(post_tags -> tags (tag_id));
 diesel::joinable!(posts -> users (author_id));
+diesel::joinable!(user_group_members -> user_groups (group_id));
+diesel::joinable!(user_group_members -> users (user_id));
+diesel::joinable!(user_groups -> users (user_id));
 diesel::joinable!(user_roles -> roles (role_id));
 diesel::joinable!(user_roles -> users (user_id));
 
@@ -127,6 +150,8 @@ diesel::allow_tables_to_appear_in_same_query!(
     posts,
     roles,
     tags,
+    user_group_members,
+    user_groups,
     user_roles,
     users,
 );

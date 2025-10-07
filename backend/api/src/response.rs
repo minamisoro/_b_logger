@@ -39,11 +39,11 @@ pub trait ApiResponseExt {
 pub struct ApiError {
     #[serde(skip)]
     #[schema(ignore)]
-    status_code: StatusCode,
+    pub status_code: StatusCode,
     /// Error code identifier
-    code: String,
+    pub code: String,
     /// Human-readable error message
-    message: String,
+    pub message: String,
 }
 
 impl<T: IntoSuccess> ApiResponseExt for Result<T, ApiError> {
