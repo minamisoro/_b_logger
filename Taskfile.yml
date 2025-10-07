@@ -34,3 +34,8 @@ tasks:
     cmds:
       - cargo test
       - npm run test
+
+  seed:
+    desc: Seed the database with sample data
+    cmds:
+      - cargo run -p blogger-scripts --bin seed
