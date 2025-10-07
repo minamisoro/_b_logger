@@ -1,98 +1,234 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import TimelineIcon from '@/components/TimelineIcon.vue'
-import { apiClient } from '@/api/client'
-import type { TimelinePost } from '@lib/client'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import { useTimelineStore } from '@/stores/timeline'
+import TimelinePost from '@/components/TimelinePost.vue'
+import UserGroupPanel from '@/components/UserGroupPanel.vue'
 
-const posts = ref<TimelinePost[]>([])
-const loading = ref(true)
-const error = ref<string | null>(null)
+const route = useRoute()
+const timelineStore = useTimelineStore()
 
-onMounted(async () => {
-  try {
-    loading.value = true
-    error.value = null
+const sentinel = ref<HTMLElement | null>(null)
+const observer = ref<IntersectionObserver | null>(null)
 
-    const { data, error: apiError } = await apiClient.timeline.getTimeline({
-      limit: 10,
-      pages: 0
-    })
+// Check if user is specified in URL
+const userIdFromRoute = computed(() => {
+  const userId = route.query.user
+  return typeof userId === 'string' ? userId : null
+})
 
-    if (data) {
-      posts.value = data.posts
-    } else if (apiError) {
-      error.value = 'Failed to load timeline. Please try again later.'
-      console.error('Failed to load timeline:', apiError)
+const showSidebar = computed(() => !userIdFromRoute.value)
+
+// Setup infinite scroll observer
+function setupInfiniteScroll() {
+  if (!sentinel.value) return
+
+  observer.value = new IntersectionObserver(
+    (entries) => {
+      const entry = entries[0]
+      if (entry && entry.isIntersecting && timelineStore.hasMore && !timelineStore.loading) {
+        timelineStore.loadMore()
+      }
+    },
+    {
+      threshold: 0.1,
+      rootMargin: '100px'
     }
-  } catch (err) {
-    error.value = 'An unexpected error occurred while loading the timeline.'
-    console.error('Unexpected error:', err)
-  } finally {
-    loading.value = false
+  )
+
+  observer.value.observe(sentinel.value)
+}
+
+function cleanupInfiniteScroll() {
+  if (observer.value) {
+    observer.value.disconnect()
+    observer.value = null
   }
+}
+
+// Watch for route changes to update filter
+watch(userIdFromRoute, (newUserId) => {
+  if (newUserId) {
+    timelineStore.setFilter({ userId: newUserId })
+  } else {
+    timelineStore.setFilter({})
+  }
+})
+
+onMounted(() => {
+  // Set initial filter from URL
+  if (userIdFromRoute.value) {
+    timelineStore.setFilter({ userId: userIdFromRoute.value })
+  } else {
+    timelineStore.fetchPosts(true)
+  }
+
+  // Setup infinite scroll
+  setupInfiniteScroll()
+})
+
+onUnmounted(() => {
+  cleanupInfiniteScroll()
 })
 </script>
 
 <template>
-  <v-container>
-    <v-row>
-      <v-col cols="12" md="8" offset-md="2">
-        <!-- Loading State -->
-        <div v-if="loading" class="d-flex justify-center align-center" style="min-height: 400px">
-          <v-progress-circular
-            indeterminate
-            color="primary"
-            size="64"
-          />
+  <div class="timeline-view">
+    <div class="container">
+      <!-- Left sidebar: User group filter panel (only shown when no user filter in URL) -->
+      <UserGroupPanel v-if="showSidebar" class="sidebar" />
+
+      <!-- Main timeline -->
+      <div class="timeline-main">
+        <h1>Timeline</h1>
+
+        <!-- Loading state -->
+        <div v-if="timelineStore.loading && timelineStore.posts.length === 0" class="loading">
+          Loading timeline...
         </div>
 
-        <!-- Error State -->
-        <v-alert
-          v-else-if="error"
-          type="error"
-          variant="tonal"
-          closable
-          @click:close="error = null"
-        >
-          {{ error }}
-        </v-alert>
+        <!-- Error state -->
+        <div v-else-if="timelineStore.error" class="error">
+          {{ timelineStore.error }}
+        </div>
 
-        <!-- Timeline Content -->
-        <v-timeline v-else-if="posts.length > 0" align="start">
-          <v-timeline-item
-            v-for="post in posts"
-            :key="post.id"
-            dot-color="primary"
-            size="small"
-            density="compact"
-          >
-            <template v-slot:icon>
-              <timeline-icon type="generic" />
-            </template>
-            <v-card>
-              <template v-slot:title>
-                <v-btn>{{ post.title }}</v-btn>
-              </template>
-              <template v-slot:text>
-                {{ post.content }}
-              </template>
-            </v-card>
-          </v-timeline-item>
-        </v-timeline>
+        <!-- Timeline posts -->
+        <div v-else class="timeline-container">
+          <!-- Vertical timeline line -->
+          <div class="timeline-line"></div>
 
-        <!-- Empty State -->
-        <v-card v-else variant="outlined">
-          <v-card-text class="text-center py-8">
-            <v-icon size="64" color="grey-lighten-1" class="mb-4">
-              mdi-timeline-text-outline
-            </v-icon>
-            <div class="text-h6 text-grey">No posts available</div>
-            <div class="text-body-2 text-grey-lighten-1 mt-2">
-              Check back later for new content
+          <!-- Posts -->
+          <div class="timeline-posts">
+            <TimelinePost
+              v-for="post in timelineStore.posts"
+              :key="post.id"
+              :post="post"
+              class="timeline-post-item"
+            />
+
+            <!-- Empty state -->
+            <div v-if="timelineStore.posts.length === 0" class="empty-state">
+              <p>No posts to display.</p>
             </div>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
-  </v-container>
+          </div>
+
+          <!-- Loading more indicator -->
+          <div v-if="timelineStore.loading && timelineStore.posts.length > 0" class="loading-more">
+            Loading more posts...
+          </div>
+
+          <!-- Infinite scroll sentinel -->
+          <div ref="sentinel" class="sentinel"></div>
+
+          <!-- End of timeline -->
+          <div
+            v-if="!timelineStore.hasMore && timelineStore.posts.length > 0"
+            class="end-of-timeline"
+          >
+            You've reached the end of the timeline
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
+
+<style scoped>
+.timeline-view {
+  padding: var(--spacing-lg);
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  gap: var(--spacing-xl);
+}
+
+.sidebar {
+  flex-shrink: 0;
+}
+
+.timeline-main {
+  flex: 1;
+  min-width: 0;
+}
+
+h1 {
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-xl);
+  font-size: 2rem;
+}
+
+.timeline-container {
+  position: relative;
+}
+
+.timeline-line {
+  position: absolute;
+  left: 20px;
+  top: 40px;
+  bottom: 0;
+  width: 2px;
+  background: var(--color-border);
+  z-index: 1;
+}
+
+.timeline-posts {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+.timeline-post-item {
+  margin-bottom: var(--spacing-md);
+}
+
+.loading,
+.error,
+.empty-state,
+.loading-more,
+.end-of-timeline {
+  text-align: center;
+  padding: var(--spacing-xl);
+  color: var(--text-secondary);
+}
+
+.error {
+  color: #d32f2f;
+}
+
+.loading-more {
+  font-style: italic;
+}
+
+.end-of-timeline {
+  border-top: 2px solid var(--color-border);
+  margin-top: var(--spacing-xl);
+  padding-top: var(--spacing-xl);
+  opacity: 0.6;
+}
+
+.sentinel {
+  height: 1px;
+  margin-top: var(--spacing-lg);
+}
+
+.empty-state p {
+  font-size: 1.125rem;
+}
+
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    position: static;
+    width: 100%;
+  }
+}
+</style>
