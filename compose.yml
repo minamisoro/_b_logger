@@ -1,0 +1,65 @@
+services:
+  # Backend API
+  api:
+    build:
+      context: .
+      target: backend-runtime
+    container_name: blogger-api
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      RUST_LOG: ${RUST_LOG:-info}
+    volumes:
+      - ./config.toml:/app/config.toml:ro
+    ports:
+      - "8080:8080"
+    networks:
+      - blogger-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Web Frontend (Public Blog)
+  web:
+    build:
+      context: .
+      target: web-runtime
+    container_name: blogger-web
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    depends_on:
+      - api
+    networks:
+      - blogger-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:80 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Admin Frontend (Admin Panel)
+  admin:
+    build:
+      context: .
+      target: admin-runtime
+    container_name: blogger-admin
+    restart: unless-stopped
+    ports:
+      - "8082:80"
+    depends_on:
+      - api
+    networks:
+      - blogger-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:80 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  blogger-network:
+    driver: bridge
