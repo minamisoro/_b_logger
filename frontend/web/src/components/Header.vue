@@ -10,10 +10,10 @@ const userStore = useUserStore()
 const searchQuery = ref('')
 const showAdvancedSearch = ref(false)
 
-// Get the current userId from route or logged-in user
-const currentUserId = computed(() => {
-  const routeUserId = route.params.userId as string | undefined
-  return routeUserId || userStore.currentUser?.id || null
+// Get the current username from route or logged-in user
+const currentUsername = computed(() => {
+  const routeUsername = route.params.username as string | undefined
+  return routeUsername || userStore.currentUser?.username || null
 })
 
 // Navigation items
@@ -31,15 +31,14 @@ const isActive = (key: string) => {
 
 // Navigate to a view
 const navigateTo = (key: string) => {
-  if (currentUserId.value) {
-    router.push(`/${currentUserId.value}/${key}`)
+  if (currentUsername.value) {
+    router.push(`/${currentUsername.value}/${key}`)
   }
 }
 
 // Handle search
 const handleSearch = () => {
   if (searchQuery.value.trim()) {
-    console.log('Search query:', searchQuery.value)
     // TODO: Implement search functionality
   }
 }
@@ -133,7 +132,7 @@ const goHome = () => {
             :key="item.key"
             @click="navigateTo(item.key)"
             :class="['item', { active: isActive(item.key) }]"
-            :disabled="!currentUserId"
+            :disabled="!currentUsername"
           >
             {{ item.name }}
           </button>

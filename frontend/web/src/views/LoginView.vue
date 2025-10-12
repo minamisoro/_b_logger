@@ -27,6 +27,7 @@ const handleLogin = () => {
   // Mock login
   userStore.login({
     id: userId.value.trim(),
+    username: userId.value.trim(),
     name: userName.value.trim(),
     avatarUrl: `https://i.pravatar.cc/150?u=${userId.value}`,
   })
@@ -35,10 +36,10 @@ const handleLogin = () => {
   router.push(`/${userId.value.trim()}/timeline`)
 }
 
-const useMockLogin = () => {
-  userStore.mockLogin()
+const useMockLogin = async () => {
+  await userStore.mockLogin()
   if (userStore.currentUser) {
-    router.push(`/${userStore.currentUser.id}/timeline`)
+    router.push(`/${userStore.currentUser.username}/timeline`)
   }
 }
 </script>

@@ -20,22 +20,22 @@ const router = createRouter({
       component: LoginView
     },
     {
-      path: '/:userId/timeline',
+      path: '/:username/timeline',
       name: 'timeline',
       component: TimelineView
     },
     {
-      path: '/:userId/network',
+      path: '/:username/network',
       name: 'network',
       component: NetworkView
     },
     {
-      path: '/:userId/inputs',
+      path: '/:username/inputs',
       name: 'inputs',
       component: InputsView
     },
     {
-      path: '/:userId/published',
+      path: '/:username/published',
       name: 'published',
       component: PublishedView
     }

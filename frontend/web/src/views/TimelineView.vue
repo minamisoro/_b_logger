@@ -2,37 +2,60 @@
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useTimelineStore } from '@/stores/timeline'
+import { useUserStore } from '@/stores/user'
 import TimelinePost from '@/components/TimelinePost.vue'
 import UserGroupPanel from '@/components/UserGroupPanel.vue'
 
 const route = useRoute()
 const timelineStore = useTimelineStore()
+const userStore = useUserStore()
 
 const sentinel = ref<HTMLElement | null>(null)
 const observer = ref<IntersectionObserver | null>(null)
+const userNotFound = ref(false)
 
-// Check if user is specified in URL
-const userIdFromRoute = computed(() => {
-  const userId = route.query.user
-  return typeof userId === 'string' ? userId : null
+// Get username from route parameter
+const usernameFromRoute = computed(() => {
+  const username = route.params.username
+  return typeof username === 'string' ? username : null
 })
 
-const showSidebar = computed(() => !userIdFromRoute.value)
+// Only show sidebar if logged-in user matches the URL user
+const showSidebar = computed(() => {
+  if (!userStore.isLoggedIn || !usernameFromRoute.value) {
+    return false
+  }
+  return userStore.currentUser?.username === usernameFromRoute.value
+})
+
+// Check if viewing another user's timeline
+const isViewingOtherUser = computed(() => {
+  const routeUsername = usernameFromRoute.value
+  const loggedInUsername = userStore.currentUser?.username
+  return routeUsername && routeUsername !== loggedInUsername
+})
 
 // Setup infinite scroll observer
 function setupInfiniteScroll() {
   if (!sentinel.value) return
 
+  // Clean up existing observer first
+  if (observer.value) {
+    observer.value.disconnect()
+  }
+
   observer.value = new IntersectionObserver(
     (entries) => {
-      const entry = entries[0]
-      if (entry && entry.isIntersecting && timelineStore.hasMore && !timelineStore.loading) {
-        timelineStore.loadMore()
-      }
+      entries.forEach((entry) => {
+        if (entry.isIntersecting && timelineStore.hasMore && !timelineStore.loading) {
+          timelineStore.loadMore()
+        }
+      })
     },
     {
-      threshold: 0.1,
-      rootMargin: '100px'
+      root: null, // viewport
+      rootMargin: '500px', // Load much earlier - 500px before reaching the sentinel
+      threshold: 0 // Trigger as soon as any part is visible
     }
   )
 
@@ -47,24 +70,67 @@ function cleanupInfiniteScroll() {
 }
 
 // Watch for route changes to update filter
-watch(userIdFromRoute, (newUserId) => {
-  if (newUserId) {
-    timelineStore.setFilter({ userId: newUserId })
-  } else {
-    timelineStore.setFilter({})
+watch(
+  [usernameFromRoute, () => userStore.currentUser?.username],
+  ([newUsername, loggedInUsername]) => {
+    userNotFound.value = false
+    // Only apply user filter if viewing someone else's timeline
+    if (newUsername && newUsername !== loggedInUsername) {
+      timelineStore.setFilter({ userId: newUsername })
+    } else if (newUsername) {
+      // Viewing own timeline, allow group filtering
+      timelineStore.setFilter({})
+    } else {
+      timelineStore.setFilter({})
+    }
   }
-})
+)
+
+// Watch for error indicating user not found
+watch(
+  [() => timelineStore.error, () => timelineStore.posts.length, isViewingOtherUser],
+  ([error, postsCount, viewingOther]) => {
+    // If viewing another user and got an error or no posts after loading, user might not exist
+    if (viewingOther && !timelineStore.loading && postsCount === 0 && error) {
+      // Check if error indicates user not found (404 or "not found" message)
+      if (error.includes('404') || error.toLowerCase().includes('not found') || error.toLowerCase().includes('user')) {
+        userNotFound.value = true
+      }
+    }
+  }
+)
+
+// Watch for posts changes to re-setup observer if needed
+watch(
+  () => timelineStore.posts.length,
+  (newLength) => {
+    if (newLength > 0 && sentinel.value) {
+      // Re-setup observer whenever posts change
+      // Use nextTick to ensure DOM is updated
+      setTimeout(() => {
+        setupInfiniteScroll()
+      }, 50)
+    }
+  }
+)
 
 onMounted(() => {
   // Set initial filter from URL
-  if (userIdFromRoute.value) {
-    timelineStore.setFilter({ userId: userIdFromRoute.value })
+  const routeUsername = usernameFromRoute.value
+  const loggedInUsername = userStore.currentUser?.username
+
+  if (routeUsername && routeUsername !== loggedInUsername) {
+    // Viewing someone else's timeline, filter by that user
+    timelineStore.setFilter({ userId: routeUsername })
   } else {
+    // Viewing own timeline or no user specified, allow group filtering
     timelineStore.fetchPosts(true)
   }
 
-  // Setup infinite scroll
-  setupInfiniteScroll()
+  // Setup infinite scroll with a delay to ensure DOM is ready
+  setTimeout(() => {
+    setupInfiniteScroll()
+  }, 200)
 })
 
 onUnmounted(() => {
@@ -82,8 +148,16 @@ onUnmounted(() => {
       <div class="timeline-main">
         <h1>Timeline</h1>
 
+        <!-- User not found state -->
+        <div v-if="userNotFound" class="user-not-found">
+          <div class="icon">👤</div>
+          <h2>User Not Found</h2>
+          <p>The user "{{ usernameFromRoute }}" does not exist or their timeline is not available.</p>
+          <p class="hint">Please check the URL and try again.</p>
+        </div>
+
         <!-- Loading state -->
-        <div v-if="timelineStore.loading && timelineStore.posts.length === 0" class="loading">
+        <div v-else-if="timelineStore.loading && timelineStore.posts.length === 0" class="loading">
           Loading timeline...
         </div>
 
@@ -180,11 +254,11 @@ h1 {
   z-index: 2;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xl);
+  gap: var(--spacing-md);
 }
 
 .timeline-post-item {
-  margin-bottom: var(--spacing-md);
+  margin-bottom: 0;
 }
 
 .loading,
@@ -201,6 +275,38 @@ h1 {
   color: #d32f2f;
 }
 
+.user-not-found {
+  text-align: center;
+  padding: var(--spacing-xl) var(--spacing-lg);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.user-not-found .icon {
+  font-size: 4rem;
+  margin-bottom: var(--spacing-md);
+  opacity: 0.5;
+}
+
+.user-not-found h2 {
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-md);
+  font-size: 1.75rem;
+}
+
+.user-not-found p {
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-sm);
+  font-size: 1.125rem;
+  line-height: 1.6;
+}
+
+.user-not-found .hint {
+  font-size: 1rem;
+  opacity: 0.8;
+  font-style: italic;
+}
+
 .loading-more {
   font-style: italic;
 }
@@ -214,7 +320,10 @@ h1 {
 
 .sentinel {
   height: 1px;
-  margin-top: var(--spacing-lg);
+  width: 100%;
+  pointer-events: none;
+  visibility: hidden;
+  margin: 0;
 }
 
 .empty-state p {

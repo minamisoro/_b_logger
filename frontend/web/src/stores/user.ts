@@ -1,8 +1,14 @@
 import { ref, computed, watch } from 'vue'
 import { defineStore } from 'pinia'
+import { createClient } from 'blogger-lib/client'
+
+const client = createClient({
+  baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:8080'
+})
 
 export interface User {
   id: string
+  username: string
   name: string
   avatarUrl?: string
 }
@@ -17,7 +23,7 @@ export const useUserStore = defineStore('user', () => {
       try {
         const parsed = JSON.parse(stored)
         // Validate the structure
-        if (parsed && typeof parsed.id === 'string' && typeof parsed.name === 'string') {
+        if (parsed && typeof parsed.id === 'string' && typeof parsed.username === 'string' && typeof parsed.name === 'string') {
           return parsed as User
         }
         // Invalid structure, clear it
@@ -61,12 +67,26 @@ export const useUserStore = defineStore('user', () => {
   }
 
   // Mock login for development (can be called from UI)
-  const mockLogin = () => {
-    login({
-      id: 'demo-user',
-      name: 'Demo User',
-      avatarUrl: 'https://i.pravatar.cc/150?img=3',
-    })
+  const mockLogin = async () => {
+    // Fetch a random user from the database
+    const { data, error } = await client.users.getRandom()
+
+    if (error) {
+      console.error('Failed to fetch random user:', error)
+      return
+    }
+
+    if (data) {
+      // Generate a random avatar for the user
+      const avatarId = Math.floor(Math.random() * 70) + 1
+
+      login({
+        id: data.id,
+        username: data.username,
+        name: data.display_name || data.username,
+        avatarUrl: `https://i.pravatar.cc/150?img=${avatarId}`,
+      })
+    }
   }
 
   return {

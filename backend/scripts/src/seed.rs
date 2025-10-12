@@ -291,8 +291,58 @@ fn seed_tags(conn: &mut PgConnection) -> Vec<Tag> {
 fn seed_posts(conn: &mut PgConnection, users: &[User]) -> Vec<Post> {
     let mut rng = rand::thread_rng();
     let mut posts = Vec::new();
+    let mut post_count = 0;
 
-    for i in 0..NUM_POSTS {
+    // First, ensure each user has at least 2-5 published posts
+    for user in users {
+        let num_user_posts = rng.gen_range(2..=5);
+
+        for _ in 0..num_user_posts {
+            let title: String = Sentence(3..8).fake();
+            let slug = title
+                .to_lowercase()
+                .replace(" ", "-")
+                .chars()
+                .filter(|c| c.is_alphanumeric() || *c == '-')
+                .collect::<String>();
+
+            // Generate realistic content
+            let num_paragraphs = rng.gen_range(3..10);
+            let paragraphs: Vec<String> = (0..num_paragraphs)
+                .map(|_| Paragraph(5..15).fake::<String>())
+                .collect();
+            let content = paragraphs.join("\n\n");
+
+            // Always published and public for guaranteed posts
+            let published = true;
+            let visibility = "public";
+
+            // Random publish date in the past year
+            let days_ago = rng.gen_range(0..365);
+            let published_at = Some(Utc::now().naive_utc() - Duration::days(days_ago));
+
+            let new_post = NewPost {
+                author_id: user.id,
+                title: title.clone(),
+                slug: format!("{}-{}", slug, post_count),
+                content,
+                published,
+                visibility: visibility.to_string(),
+                published_at,
+            };
+
+            let post: Post = diesel::insert_into(posts::table)
+                .values(&new_post)
+                .get_result(conn)
+                .expect("Error inserting post");
+
+            posts.push(post);
+            post_count += 1;
+        }
+    }
+
+    // Then, add remaining random posts to reach NUM_POSTS
+    while post_count < NUM_POSTS {
         let author = users.choose(&mut rng).unwrap();
         let title: String = Sentence(3..8).fake();
         let slug = title
@@ -328,7 +378,7 @@ fn seed_posts(conn: &mut PgConnection, users: &[User]) -> Vec<Post> {
         let new_post = NewPost {
             author_id: author.id,
             title: title.clone(),
-            slug: format!("{}-{}", slug, i),
+            slug: format!("{}-{}", slug, post_count),
             content,
             published,
             visibility: visibility.to_string(),
@@ -341,6 +391,7 @@ fn seed_posts(conn: &mut PgConnection, users: &[User]) -> Vec<Post> {
             .expect("Error inserting post");
 
         posts.push(post);
+        post_count += 1;
     }
 
     posts

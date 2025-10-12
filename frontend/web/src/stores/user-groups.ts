@@ -1,9 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import openapi from 'openapi-fetch'
-import type { components, paths } from 'blogger-lib/api'
+import { createClient, type components } from 'blogger-lib/client'
 
-const client = openapi<paths>({
+const client = createClient({
   baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:8080'
 })
 
@@ -22,7 +21,7 @@ export const useUserGroupsStore = defineStore('user-groups', () => {
     error.value = null
 
     try {
-      const { data, error: fetchError } = await client.GET('/api/user-groups')
+      const { data, error: fetchError } = await client.userGroups.list()
 
       if (fetchError) {
         error.value = fetchError.message || 'Failed to fetch user groups'
@@ -44,9 +43,7 @@ export const useUserGroupsStore = defineStore('user-groups', () => {
     error.value = null
 
     try {
-      const { data, error: createError } = await client.POST('/api/user-groups', {
-        body: request
-      })
+      const { data, error: createError } = await client.userGroups.create(request)
 
       if (createError) {
         error.value = createError.message || 'Failed to create group'
@@ -70,10 +67,7 @@ export const useUserGroupsStore = defineStore('user-groups', () => {
     error.value = null
 
     try {
-      const { data, error: updateError } = await client.PUT('/api/user-groups/{id}', {
-        params: { path: { id } },
-        body: request
-      })
+      const { data, error: updateError } = await client.userGroups.update(id, request)
 
       if (updateError) {
         error.value = updateError.message || 'Failed to update group'
@@ -100,9 +94,7 @@ export const useUserGroupsStore = defineStore('user-groups', () => {
     error.value = null
 
     try {
-      const { error: deleteError } = await client.DELETE('/api/user-groups/{id}', {
-        params: { path: { id } }
-      })
+      const { error: deleteError } = await client.userGroups.delete(id)
 
       if (deleteError) {
         error.value = deleteError.message || 'Failed to delete group'
@@ -127,10 +119,7 @@ export const useUserGroupsStore = defineStore('user-groups', () => {
     error.value = null
 
     try {
-      const { error: addError } = await client.POST('/api/user-groups/{id}/members', {
-        params: { path: { id: groupId } },
-        body: { user_id: userId }
-      })
+      const { error: addError } = await client.userGroups.addMember(groupId, { user_id: userId })
 
       if (addError) {
         error.value = addError.message || 'Failed to add member'
@@ -153,12 +142,7 @@ export const useUserGroupsStore = defineStore('user-groups', () => {
     error.value = null
 
     try {
-      const { error: removeError } = await client.DELETE(
-        '/api/user-groups/{id}/members/{user_id}',
-        {
-          params: { path: { id: groupId, user_id: userId } }
-        }
-      )
+      const { error: removeError } = await client.userGroups.removeMember(groupId, userId)
 
       if (removeError) {
         error.value = removeError.message || 'Failed to remove member'

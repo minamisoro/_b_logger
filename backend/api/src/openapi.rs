@@ -6,6 +6,7 @@ use crate::routes::user_groups::types::{
     UserGroupResponse, UserGroupMemberInfo, CreateUserGroupRequest,
     UpdateUserGroupRequest, AddMemberRequest, ListUserGroupsResponse
 };
+use crate::routes::users::types::UserInfo;
 
 #[derive(OpenApi)]
 #[openapi(
@@ -17,6 +18,7 @@ use crate::routes::user_groups::types::{
         crate::routes::user_groups::delete_user_group,
         crate::routes::user_groups::add_group_member,
         crate::routes::user_groups::remove_group_member,
+        crate::routes::users::get_random_user,
     ),
     components(
         schemas(
@@ -28,12 +30,14 @@ use crate::routes::user_groups::types::{
             CreateUserGroupRequest,
             UpdateUserGroupRequest,
             AddMemberRequest,
-            ListUserGroupsResponse
+            ListUserGroupsResponse,
+            UserInfo
         )
     ),
     tags(
         (name = "Timeline", description = "Timeline endpoints for retrieving published posts"),
-        (name = "User Groups", description = "User group management endpoints")
+        (name = "User Groups", description = "User group management endpoints"),
+        (name = "Users", description = "User information endpoints")
     ),
     info(
         title = "Blogger API",

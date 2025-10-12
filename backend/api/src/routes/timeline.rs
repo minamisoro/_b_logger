@@ -26,6 +26,12 @@ pub mod types {
         pub published_at: String,
         /// Post category (derived from primary tag)
         pub category: String,
+        /// Author username
+        pub author_username: String,
+        /// Author display name
+        pub author_display_name: Option<String>,
+        /// Author avatar URL
+        pub author_avatar_url: Option<String>,
     }
 
     #[derive(Deserialize, ToSchema, IntoParams)]
@@ -35,8 +41,8 @@ pub mod types {
         pub limit: i64,
         /// Cursor for pagination (use last post's published_at timestamp)
         pub cursor: Option<String>,
-        /// Filter by specific user ID
-        pub user_id: Option<Uuid>,
+        /// Filter by specific username
+        pub user_id: Option<String>,
         /// Filter by user group ID
         pub group_id: Option<Uuid>,
     }
@@ -94,8 +100,26 @@ async fn get_timeline(
     }
 
     // Apply user filtering
-    if let Some(user_id) = query.user_id {
-        posts_query = posts_query.filter(author_id.eq(user_id));
+    if let Some(username) = query.user_id {
+        // Look up user UUID by username
+        use crate::schema::users;
+
+        match users::table
+            .filter(users::username.eq(&username))
+            .select(users::id)
+            .first::<uuid::Uuid>(&mut conn)
+        {
+            Ok(user_uuid) => {
+                posts_query = posts_query.filter(author_id.eq(user_uuid));
+            }
+            Err(_) => {
+                // User not found, return empty result
+                return ApiResponse::Success(GetTimelineResponse {
+                    posts: vec![],
+                    next_cursor: None,
+                });
+            }
+        }
     } else if let Some(group_id) = query.group_id {
         // Filter by user group members
         let user_ids: Vec<uuid::Uuid> = match user_group_members::table
@@ -116,8 +140,16 @@ async fn get_timeline(
         posts_query = posts_query.filter(author_id.eq_any(user_ids));
     }
 
-    // Execute query with ordering and limit
-    let result_posts: Vec<Post> = match posts_query
+    // Execute query with ordering and limit, joining with users to get author info
+    use crate::schema::users;
+
+    let result_posts: Vec<(Post, String, Option<String>)> = match posts_query
+        .inner_join(users::table.on(author_id.eq(users::id)))
+        .select((
+            Post::as_select(),
+            users::username,
+            users::display_name,
+        ))
         .order(published_at.desc())
         .limit(limit + 1) // Fetch one extra to determine if there are more pages
         .load(&mut conn)
@@ -141,7 +173,7 @@ async fn get_timeline(
     };
 
     let next_cursor = if has_more {
-        posts_to_return.last().and_then(|p| p.published_at.map(|t| t.and_utc().to_rfc3339()))
+        posts_to_return.last().and_then(|(p, _, _)| p.published_at.map(|t| t.and_utc().to_rfc3339()))
     } else {
         None
     };
@@ -150,7 +182,7 @@ async fn get_timeline(
     // For now, using a default category - will be enhanced with tag-based categories
     let timeline_posts: Vec<TimelinePost> = posts_to_return
         .iter()
-        .map(|p| TimelinePost {
+        .map(|(p, username, display_name)| TimelinePost {
             id: p.id.to_string(),
             title: p.title.clone(),
             content: p.content.clone(),
@@ -158,6 +190,9 @@ async fn get_timeline(
                 .map(|t| t.and_utc().to_rfc3339())
                 .unwrap_or_default(),
             category: "generic".to_string(), // TODO: Derive from tags
+            author_username: username.clone(),
+            author_display_name: display_name.clone(),
+            author_avatar_url: None, // TODO: Add avatar support to user model
         })
         .collect();
 

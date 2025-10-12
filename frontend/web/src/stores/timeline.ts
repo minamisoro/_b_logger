@@ -1,9 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import openapi from 'openapi-fetch'
-import type { components, paths } from 'blogger-lib/api'
+import { createClient, type components } from 'blogger-lib/client'
 
-const client = openapi<paths>({
+const client = createClient({
   baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:8080'
 })
 
@@ -28,22 +27,11 @@ export const useTimelineStore = defineStore('timeline', () => {
     error.value = null
 
     try {
-      const params: Record<string, string | number | undefined> = {
-        limit: 20
-      }
-
-      if (!reset && nextCursor.value) {
-        params.cursor = nextCursor.value
-      }
-
-      if (userId.value) {
-        params.user_id = userId.value
-      } else if (groupId.value) {
-        params.group_id = groupId.value
-      }
-
-      const { data, error: fetchError } = await client.GET('/api/timeline', {
-        params: { query: params as any }
+      const { data, error: fetchError } = await client.timeline.getTimeline({
+        limit: 50,
+        cursor: !reset && nextCursor.value ? nextCursor.value : null,
+        user_id: userId.value,
+        group_id: groupId.value
       })
 
       if (fetchError) {
@@ -67,7 +55,11 @@ export const useTimelineStore = defineStore('timeline', () => {
   }
 
   function setFilter(params: { userId?: string | null; groupId?: string | null }) {
-    if (params.userId !== undefined) {
+    // If empty object or explicitly clearing, reset both filters
+    if (Object.keys(params).length === 0) {
+      userId.value = null
+      groupId.value = null
+    } else if (params.userId !== undefined) {
       userId.value = params.userId
       groupId.value = null
     } else if (params.groupId !== undefined) {
