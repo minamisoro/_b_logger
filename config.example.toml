@@ -16,3 +16,13 @@ port = 8081
 [frontend.admin]
 host = "127.0.0.1"
 port = 8082
+
+[webhook]
+# GitHub webhook secret for validating webhook requests
+# This should match the secret configured in GitHub repository settings
+# Can also be set via WEBHOOK_SECRET environment variable
+secret = "your-webhook-secret-here"
+
+# Path to the deployment script that will be executed when a release is published
+# Can also be set via DEPLOY_SCRIPT_PATH environment variable
+deploy_script_path = "/app/scripts/deploy.sh"

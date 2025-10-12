@@ -1,4 +1,30 @@
 services:
+  # Webhook Server (Separate for Security)
+  webhook:
+    build:
+      context: .
+      dockerfile: Dockerfile.webhook
+    container_name: blogger-webhook
+    restart: unless-stopped
+    environment:
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET}
+      WEBHOOK_PORT: ${WEBHOOK_PORT:-9000}
+      DEPLOY_SCRIPT_PATH: /app/scripts/deploy.sh
+      RUST_LOG: ${RUST_LOG:-info}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - .:/app/project
+    ports:
+      - "9000:9000"
+    networks:
+      - blogger-network
+    user: root  # Required for Docker socket and git operations
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   # Backend API
   api:
     build:

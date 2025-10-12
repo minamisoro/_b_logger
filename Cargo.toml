@@ -3,5 +3,6 @@ members = [
     "backend/api",
     "backend/macro",
     "backend/scripts",
+    "backend/webhook-server",
 ]
 resolver = "2"

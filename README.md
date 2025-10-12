@@ -199,6 +199,36 @@ npm run build
 - **Vitest** for unit testing
 - **ESLint + Prettier** for code quality
 
+## Docker Deployment
+
+### Quick Deploy
+
+```bash
+# Set environment variables
+export DATABASE_URL="postgresql://user:pass@host/db"
+export WEBHOOK_SECRET="$(openssl rand -hex 32)"
+
+# Build and start all services
+docker compose up -d
+```
+
+### Services
+
+- **API** (port 8080) - REST API server
+- **Web** (port 8081) - Public blog
+- **Admin** (port 8082) - Admin panel
+- **Webhook** (port 9000) - GitHub webhook handler for auto-deployment
+
+### GitHub Webhook Setup
+
+1. Generate secret: `openssl rand -hex 32`
+2. Set `WEBHOOK_SECRET` environment variable
+3. Configure GitHub webhook:
+   - URL: `https://your-domain.com:9000/webhook/github`
+   - Secret: Your generated secret
+   - Events: Releases
+4. When you publish a release, it automatically pulls code and rebuilds containers
+
 ## Documentation
 
 For detailed development instructions, see [CLAUDE.md](CLAUDE.md).
