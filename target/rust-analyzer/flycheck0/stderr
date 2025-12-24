@@ -1,8 +1,0 @@
-error: failed to load manifest for workspace member `/home/koinu/projects/_b_logger/backend/api`
-referenced by workspace at `/home/koinu/projects/_b_logger/Cargo.toml`
-
-Caused by:
-  failed to read `/home/koinu/projects/_b_logger/backend/api/Cargo.toml`
-
-Caused by:
-  No such file or directory (os error 2)
