@@ -1,0 +1,9 @@
+{
+  // Import paths for IntelliSense and diagnostics (recommended)
+  "protobuf.includes": [
+    "${workspaceFolder}/proto"
+  ],
+  // Protoc compilation settings
+  "protobuf.protoc.path": "protoc",
+  "protobuf.protoc.options": ["--proto_path=${workspaceFolder}/proto", "--go_out=${workspaceFolder}/gen/go"]
+}
